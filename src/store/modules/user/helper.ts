@@ -16,8 +16,8 @@ export function defaultSetting(): UserState {
   return {
     userInfo: {
       avatar: 'https://raw.githubusercontent.com/leizhenpeng/chatgpt-perfectui/main/src/assets/avatar.jpg',
-      name: 'leizhenpeng',
-      description: 'Star on <a href="https://github.com/leizhenpeng/chatgpt-perfectui" class="text-blue-500" target="_blank" >Github</a>',
+      name: 'Guest',
+      description: 'Demo user',
     },
   }
 }
