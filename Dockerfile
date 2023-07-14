@@ -20,6 +20,8 @@ FROM node:lts-alpine as backend
 
 RUN npm install pnpm -g
 
+RUN pnpm add openai
+
 WORKDIR /app
 
 COPY /service/package.json /app

@@ -136,7 +136,7 @@ ${message}
     let searchResult: any
     if (activeProject.value) {
       searchResult = await similaritySearch(message, activeProject.value.name)
-      prompt += `\nCryptocurrency data/document(s): \n${searchResult.data.map(r => r.content).join('\n')}` + '\n\Now answer the question using the cryptocurrency data or document(s) above with question language.'
+      prompt += `\nCryptocurrency data/document(s): \n${searchResult.data.map((r: { content: any }) => r.content).join('\n')}` + '\n\Now answer the question using the cryptocurrency data or document(s) above with question language.'
     }
 
     const fetchChatAPIOnce = async () => {
@@ -294,7 +294,7 @@ ${message}
     let searchResult: any
     if (activeProject.value) {
       searchResult = await similaritySearch(message, activeProject.value.name)
-      prompt += `\nCryptocurrency data/document(s): \n${searchResult.data.map(r => r.content).join('\n')}` + '\n\Now answer the question using the cryptocurrency data or document(s) above with question language.'
+      prompt += `\nCryptocurrency data/document(s): \n${searchResult.data.map((r: { content: any }) => r.content).join('\n')}` + '\n\Now answer the question using the cryptocurrency data or document(s) above with question language.'
     }
 
     const fetchChatAPIOnce = async () => {
