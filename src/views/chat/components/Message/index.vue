@@ -14,6 +14,7 @@ interface Props {
   inversion?: boolean
   error?: boolean
   loading?: boolean
+  sources?: Chat.Source[]
 }
 
 interface Emit {
@@ -94,7 +95,7 @@ function handleRegenerate() {
         {{ dateTime }}
       </p>
       <div
-        class="flex items-end gap-1 mt-2"
+        class="flex items-end gap-1 mt-2 flex-col"
         :class="[inversion ? 'flex-row-reverse' : 'flex-row']"
       >
         <TextComponent
@@ -118,6 +119,19 @@ function handleRegenerate() {
               <SvgIcon icon="ri:more-2-fill" />
             </button>
           </NDropdown>
+        </div>
+        <div class="flex flex-col">
+          <div v-for="(source, idx) in sources" :key="idx">
+            <div class="text-lg font-bold">
+              Source {{ idx + 1 }}
+            </div>
+            <div class="pl-5">
+              <div>{{ source.content }}</div>
+              <div class="mt-5">
+                Score: {{ source.score }}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

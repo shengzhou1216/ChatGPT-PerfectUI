@@ -1,5 +1,10 @@
 declare namespace Chat {
 
+	interface Source {
+		content: string
+		score: number
+	}
+
 	interface Chat {
 		dateTime: string
 		text: string
@@ -8,6 +13,7 @@ declare namespace Chat {
 		loading?: boolean
 		conversationOptions?: ConversationRequest | null
 		requestOptions: { prompt: string; options?: ConversationRequest | null }
+		sources?: Source[]
 	}
 
 	interface History {

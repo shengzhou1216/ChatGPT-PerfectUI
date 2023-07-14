@@ -49,3 +49,10 @@ export function fetchVerify<T>(token: string) {
     data: { token },
   })
 }
+
+export function similaritySearch<T = any>(prompt: string, project?: string) {
+  return post<T>({
+    url: '/similarity-search',
+    data: { prompt, project },
+  })
+}

@@ -6,12 +6,18 @@ import { SocksProxyAgent } from 'socks-proxy-agent'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import fetch from 'node-fetch'
 import axios from 'axios'
+import { Configuration, OpenAIApi } from 'openai'
 import { sendResponse } from '../utils'
 import { isNotEmptyString } from '../utils/is'
 import type { ApiModel, ChatContext, ChatGPTUnofficialProxyAPIOptions, ModelConfig } from '../types'
-import type { RequestOptions } from './types'
-
+import type { EmebeddingRequestOptions, RequestOptions } from './types'
 dotenv.config()
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+})
+
+const openai = new OpenAIApi(configuration)
 
 const ErrorCodeMessage: Record<string, string> = {
   401: '[OpenAI] 提供错误的API密钥 | Incorrect API key provided',
@@ -178,10 +184,18 @@ function setupProxy(options: ChatGPTAPIOptions | ChatGPTUnofficialProxyAPIOption
   }
 }
 
+async function createEmbedding(optinos: EmebeddingRequestOptions) {
+  const { message } = optinos
+  return openai.createEmbedding({
+    model: 'text-embedding-ada-002',
+    input: message,
+  })
+}
+
 function currentModel(): ApiModel {
   return apiModel
 }
 
-export type { ChatContext, ChatMessage }
+export type { ChatContext, ChatMessage, EmebeddingRequestOptions }
 
-export { chatReplyProcess, chatConfig, currentModel }
+export { chatReplyProcess, chatConfig, currentModel, createEmbedding }

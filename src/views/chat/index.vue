@@ -13,8 +13,8 @@ import { useUsingContext } from './hooks/useUsingContext'
 import HeaderComponent from './components/Header/index.vue'
 import { HoverButton, SvgIcon } from '@/components/common'
 import { useBasicLayout } from '@/hooks/useBasicLayout'
-import { useChatStore, usePromptStore } from '@/store'
-import { fetchChatAPIProcess } from '@/api'
+import { useChatStore, useProjectStore, usePromptStore } from '@/store'
+import { fetchChatAPIProcess, similaritySearch } from '@/api'
 import { t } from '@/locales'
 
 let controller = new AbortController()
@@ -54,6 +54,10 @@ dataSources.value.forEach((item, index) => {
   if (item.loading)
     updateChatSome(+uuid, index, { loading: false })
 })
+
+const projectStore = useProjectStore()
+
+const activeProject = computed(() => projectStore.getActiveProject)
 
 function handleSubmit() {
   onConversation()
@@ -108,9 +112,36 @@ async function onConversation() {
 
   try {
     let lastText = ''
+    let prompt = `You are FinChat AI. You are a superintelligent AI that answers questions about finance and investments.
+- professional & insightful
+- skilled at analyzing complex cryptocurrency data in simple language
+- an expert in cryptocurrency markets, investment strategies, and risk management
+- able to infer the intent of the user's question
+- use your own words to summarize information
+- talk as if you are talking to the user
+- do not admit lack of knowledge; provide the best possible answer based on available information, even if uncertain
+- crucially, only use numeric information present in the provided cryptocurrency data/documents. Do not generate or infer any numeric values that are not explicitly mentioned in the documents.
+- always use the most recent data points to answer user questions (as found in the "Most Recent Data" sections of the documents), unless explicitly asked otherwise.
+- avoid direct references to the documents or their contents. Instead, think of yourself as an expert conveying your own understanding of the topic, informed by the data provided. Do not say things like “According to the document, …” or “The document says that …”.
+The user will ask a question about a specific company, investor, general business, or investing principles, and you will answer it.
+
+When the user asks their question, you will answer it by analyzing the relevant cryptocurrency information and documents.
+
+Here is the user's question and cryptocurrency data or document(s) you found to answer the question:
+
+Question:
+
+${message}
+`
+    let searchResult: any
+    if (activeProject.value) {
+      searchResult = await similaritySearch(message, activeProject.value.name)
+      prompt += `\nCryptocurrency data/document(s): \n${searchResult.data.map(r => r.content).join('\n')}` + '\n\Now answer the question using the cryptocurrency data or document(s) above with question language.'
+    }
+
     const fetchChatAPIOnce = async () => {
       await fetchChatAPIProcess<Chat.ConversationResponse>({
-        prompt: message,
+        prompt,
         options,
         signal: controller.signal,
         onDownloadProgress: ({ event }) => {
@@ -134,6 +165,7 @@ async function onConversation() {
                 loading: false,
                 conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
                 requestOptions: { prompt: message, options: { ...options } },
+                sources: searchResult?.data,
               },
             )
 
@@ -238,9 +270,36 @@ async function onRegenerate(index: number) {
 
   try {
     let lastText = ''
+    let prompt = `You are FinChat AI. You are a superintelligent AI that answers questions about finance and investments.
+- professional & insightful
+- skilled at analyzing complex cryptocurrency data in simple language
+- an expert in cryptocurrency markets, investment strategies, and risk management
+- able to infer the intent of the user's question
+- use your own words to summarize information
+- talk as if you are talking to the user
+- do not admit lack of knowledge; provide the best possible answer based on available information, even if uncertain
+- crucially, only use numeric information present in the provided cryptocurrency data/documents. Do not generate or infer any numeric values that are not explicitly mentioned in the documents.
+- always use the most recent data points to answer user questions (as found in the "Most Recent Data" sections of the documents), unless explicitly asked otherwise.
+- avoid direct references to the documents or their contents. Instead, think of yourself as an expert conveying your own understanding of the topic, informed by the data provided. Do not say things like “According to the document, …” or “The document says that …”.
+The user will ask a question about a specific company, investor, general business, or investing principles, and you will answer it.
+
+When the user asks their question, you will answer it by analyzing the relevant cryptocurrency information and documents.
+
+Here is the user's question and cryptocurrency data or document(s) you found to answer the question:
+
+Question:
+
+${message}
+`
+    let searchResult: any
+    if (activeProject.value) {
+      searchResult = await similaritySearch(message, activeProject.value.name)
+      prompt += `\nCryptocurrency data/document(s): \n${searchResult.data.map(r => r.content).join('\n')}` + '\n\Now answer the question using the cryptocurrency data or document(s) above with question language.'
+    }
+
     const fetchChatAPIOnce = async () => {
       await fetchChatAPIProcess<Chat.ConversationResponse>({
-        prompt: message,
+        prompt,
         options,
         signal: controller.signal,
         onDownloadProgress: ({ event }) => {
@@ -264,6 +323,7 @@ async function onRegenerate(index: number) {
                 loading: false,
                 conversationOptions: { conversationId: data.conversationId, parentMessageId: data.id },
                 requestOptions: { prompt: message, ...options },
+                sources: searchResult?.data,
               },
             )
 
@@ -483,35 +543,32 @@ onUnmounted(() => {
           class="w-full max-w-screen-xl m-auto dark:bg-gray-800"
           :class="[isMobile ? 'p-2' : 'p-4']"
         >
-          <template v-if="!dataSources.length">
-            <div class="flex items-center justify-center mt-4 text-center text-neutral-300">
-              <SvgIcon icon="ri:bubble-chart-fill" class="mr-2 text-3xl" />
-              <span>Aha~</span>
+          <div class="flex items-center justify-center mt-4 text-center text-neutral-300">
+            <SvgIcon icon="ri:bubble-chart-fill" class="mr-2 text-3xl" />
+            <span>{{ activeProject?.name }}</span>
+          </div>
+          <div>
+            <Message
+              v-for="(item, index) of dataSources"
+              :key="index"
+              :date-time="item.dateTime"
+              :text="item.text"
+              :inversion="item.inversion"
+              :error="item.error"
+              :loading="item.loading"
+              :sources="item.sources"
+              @regenerate="onRegenerate(index)"
+              @delete="handleDelete(index)"
+            />
+            <div class="sticky bottom-0 left-0 flex justify-center">
+              <NButton v-if="loading" type="warning" @click="handleStop">
+                <template #icon>
+                  <SvgIcon icon="ri:stop-circle-line" />
+                </template>
+                Stop Responding
+              </NButton>
             </div>
-          </template>
-          <template v-else>
-            <div>
-              <Message
-                v-for="(item, index) of dataSources"
-                :key="index"
-                :date-time="item.dateTime"
-                :text="item.text"
-                :inversion="item.inversion"
-                :error="item.error"
-                :loading="item.loading"
-                @regenerate="onRegenerate(index)"
-                @delete="handleDelete(index)"
-              />
-              <div class="sticky bottom-0 left-0 flex justify-center">
-                <NButton v-if="loading" type="warning" @click="handleStop">
-                  <template #icon>
-                    <SvgIcon icon="ri:stop-circle-line" />
-                  </template>
-                  Stop Responding
-                </NButton>
-              </div>
-            </div>
-          </template>
+          </div>
         </div>
       </div>
     </main>

@@ -20,3 +20,19 @@ export function sendResponse<T>(options: SendResponseOptions<T>) {
     status: options.type,
   })
 }
+
+export function Success<T>({ data, message }: { data?: T; message?: string }) {
+  return {
+    status: 'Success',
+    message,
+    data,
+  }
+}
+
+export function Fail<T>({ data, message }: { data?: T; message?: string }) {
+  return {
+    status: 'Fail',
+    message,
+    data,
+  }
+}

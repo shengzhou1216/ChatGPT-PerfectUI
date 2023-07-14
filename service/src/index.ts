@@ -1,10 +1,18 @@
 import express from 'express'
+import { MilvusClient } from '@zilliz/milvus2-sdk-node'
+import mongoose from 'mongoose'
+import projectController from 'src/controller/project.controller'
 import type { RequestProps } from './types'
 import type { ChatMessage } from './chatgpt'
-import { chatConfig, chatReplyProcess, currentModel } from './chatgpt'
+import { chatConfig, chatReplyProcess, createEmbedding, currentModel } from './chatgpt'
 import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
 import { isNotEmptyString } from './utils/is'
+import { Success } from './utils'
+const address = 'localhost:19530'
+const username = 'root'
+const password = 'root'
+const ssl = false
 
 const app = express()
 const router = express.Router()
@@ -17,6 +25,46 @@ app.all('*', (_, res, next) => {
   res.header('Access-Control-Allow-Headers', 'authorization, Content-Type')
   res.header('Access-Control-Allow-Methods', '*')
   next()
+})
+
+let milvusClient: MilvusClient
+
+router.post('/similarity-search', async (req, res) => {
+  try {
+    const { prompt, project } = req.body as RequestProps
+    if (!project) {
+      res.send(Success({}))
+      return
+    }
+    // 计算embeddings
+    const embeddingResponse = await createEmbedding({
+      message: prompt,
+    })
+    // 搜索相似内容
+    const searchParams = {
+      anns_field: 'embeddings',
+      topk: '3',
+      metric_type: 'L2',
+      params: JSON.stringify({ ef: 64 }),
+    }
+    const searchResult = await milvusClient.search({
+      collection_name: 'document',
+      vector: embeddingResponse.data.data[0].embedding,
+      expr: `project=="${project}"`,
+      params: searchParams,
+      limit: 3,
+    })
+    res.send({
+      status: 'Success',
+      data: searchResult.results,
+    })
+  }
+  catch (error) {
+    res.write(JSON.stringify(error))
+  }
+  finally {
+    res.send()
+  }
 })
 
 router.post('/chat-process', [auth, limiter], async (req, res) => {
@@ -80,7 +128,26 @@ router.post('/verify', async (req, res) => {
   }
 })
 
+router.get('/projects', projectController.getList)
+
 app.use('', router)
 app.use('/api', router)
 
-app.listen(3002, () => globalThis.console.log('Server is running on port 3002'))
+const start = async () => {
+  try {
+    // mongodb
+    await mongoose.connect(process.env.MONGODB_URI)
+    // milvus
+    milvusClient = new MilvusClient({ address, ssl, username, password })
+    app.listen(3002, () => globalThis.console.log('Server is running on port 3002'))
+  }
+  catch (error) {
+    if (milvusClient)
+      await milvusClient.closeConnection()
+
+    console.error(error)
+    process.exit(1)
+  }
+}
+
+start()
