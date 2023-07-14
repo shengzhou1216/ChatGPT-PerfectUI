@@ -9,9 +9,9 @@ import { auth } from './middleware/auth'
 import { limiter } from './middleware/limiter'
 import { isNotEmptyString } from './utils/is'
 import { Success } from './utils'
-const address = 'localhost:19530'
-const username = 'root'
-const password = 'root'
+const address = process.env.MILVUS_ADDRESS
+const username = process.env.MILVUS_USERNAME
+const password = process.env.MILVUS_PASSWORD
 const ssl = false
 
 const app = express()
