@@ -6,7 +6,7 @@ networks:
     external: true
 
 services:
-  app:
+  server:
     build: ../service
     image: chatgpt-web # 总是使用latest,更新时重新pull该tag镜像即可
     ports:
@@ -39,14 +39,12 @@ services:
     networks:
       - finchat
 
-  nginx:
-    image: nginx:alpine
+  web:
+    image: chaingpt-web
     ports:
       - '80:80'
     volumes:
       # - ./nginx/html:/usr/share/nginx/html
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf
-    links:
-      - app
     networks:
       - finchat
