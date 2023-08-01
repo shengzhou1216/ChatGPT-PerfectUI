@@ -7,7 +7,7 @@ COPY . .
 
 RUN npm install pnpm -g && pnpm install --registry=https://registry.npm.taobao.org
 
-RUN pnpm run build
+RUN pnpm build
 
 # Stage 2: Containize
 FROM nginx:1.24.0-alpine
