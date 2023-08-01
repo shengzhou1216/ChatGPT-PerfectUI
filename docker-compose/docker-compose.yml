@@ -8,7 +8,7 @@ networks:
 services:
   server:
     build: ../service
-    image: chaingpt-server # 总是使用latest,更新时重新pull该tag镜像即可
+    image: chaingpt-frontend-server # 总是使用latest,更新时重新pull该tag镜像即可
     ports:
       - 3002:3002
     environment:
@@ -42,7 +42,7 @@ services:
   web:
     build:
       context: ../
-    image: chaingpt-web
+    image: chaingpt-frontend-web
     ports:
       - '80:80'
     volumes:
