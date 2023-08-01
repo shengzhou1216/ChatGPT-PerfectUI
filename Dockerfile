@@ -7,8 +7,6 @@ COPY . .
 
 RUN npm install pnpm -g && pnpm install --registry=https://registry.npm.taobao.org
 
-ENV VITE_GLOB_API_URL=/api
-
 RUN pnpm build
 
 # Stage 2: Containize
