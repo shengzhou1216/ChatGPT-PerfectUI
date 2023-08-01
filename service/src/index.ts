@@ -29,6 +29,8 @@ app.all('*', (_, res, next) => {
 
 let milvusClient: MilvusClient
 
+router.get('/health', (req, res) => res.send('OK'))
+
 router.post('/similarity-search', async (req, res) => {
   try {
     const { prompt, project } = req.body as RequestProps
