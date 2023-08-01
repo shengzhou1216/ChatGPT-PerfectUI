@@ -2,7 +2,7 @@
 FROM node:lts-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install pnpm -g && pnpm install
+RUN npm install pnpm -g && pnpm install --registry=https://registry.npm.taobao.org
 COPY . .
 RUN pnpm run build
 
