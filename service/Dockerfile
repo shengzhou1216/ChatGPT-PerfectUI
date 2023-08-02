@@ -14,5 +14,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 CMD [ "no
 
 EXPOSE 3002
 
-CMD [ "pnpm","run","prod" ]
+CMD [ "pnpm","prod" ]
 
