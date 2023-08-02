@@ -32,3 +32,5 @@ coverage
 /service/.env
 
 .env
+
+docker-compose.yaml
